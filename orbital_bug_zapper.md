@@ -90,67 +90,228 @@ The system acts as a turret, scanning its surroundings using optical (camera) an
    - **Test**: Power on the system to check stable power delivery to all components.
 
 ### **4. AI Learning: Implementing Real-Time Feedback**
-This section details the implementation of a feedback mechanism using machine learning to enhance detection and tracking accuracy.
 
-#### **Step-by-Step Implementation**
-1. **Initial Setup**:
-   - Install the necessary libraries:
-     ```bash
-     sudo apt-get install python3-opencv python3-picamera
-     pip install tensorflow keras numpy
-     ```
-   - Capture a dataset of images: Use the camera module to collect images of insects. Manually label these images for model training.
+In this section, we will expand on how to implement a feedback mechanism using machine learning (ML) to enhance insect detection and tracking accuracy over time. This involves capturing image data, training a neural network model, integrating the model into a real-time detection system, and periodically retraining the model based on feedback.
 
-2. **Train the Initial Machine Learning Model**:
-   - Develop a convolutional neural network (CNN) for insect detection:
-     ```python
-     from keras.models import Sequential
-     from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-     from keras.preprocessing.image import ImageDataGenerator
+### **Step-by-Step Implementation**
 
-     model = Sequential([
-         Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)),
-         MaxPooling2D(pool_size=(2, 2)),
-         Flatten(),
-         Dense(128, activation='relu'),
-         Dense(1, activation='sigmoid')  # Binary classification: Insect or not
-     ])
+#### **4.1 Initial Setup**
+Before beginning with the code, ensure all necessary hardware is in place and the following libraries are installed on your Raspberry Pi:
 
-     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+```bash
+sudo apt-get update
+sudo apt-get install python3-opencv python3-picamera
+pip install tensorflow keras numpy
+```
 
-     train_datagen = ImageDataGenerator(rescale=1./255)
-     train_generator = train_datagen.flow_from_directory('data/train', target_size=(64, 64), batch_size=32, class_mode='binary')
+#### **4.2 Data Collection**
+1. **Capture a Dataset of Images**: Collect images using the Raspberry Pi Camera Module to create a dataset of insects. Use this dataset to train a Convolutional Neural Network (CNN) for insect detection.
+   
+2. **Manual Labeling**: Organize these images into directories for binary classification:
+   - `data/train/insect/` for images containing insects.
+   - `data/train/no_insect/` for images without insects.
 
-     model.fit(train_generator, steps_per_epoch=100, epochs=5)
-     model.save('insect_detector.h5')
-     ```
-   - Save the trained model to the Raspberry Pi.
+You can use a simple script to automate the process of capturing images:
 
-3. **Integrate the Model into Real-Time Detection**:
-   - Load the model into the control script for real-time insect detection:
-     ```python
-     from keras.models import load_model
-     import cv2
-     import numpy as np
+```python
+from picamera import PiCamera
+from time import sleep
+import os
 
-     model = load_model('insect_detector.h5')
+camera = PiCamera()
+camera.resolution = (640, 480)
+save_dir = 'data/train/insect/'  # Change to 'no_insect/' as needed
 
-     def detect_insect(frame):
-         frame_resized = cv2.resize(frame, (64, 64))
-         frame_array = np.expand_dims(frame_resized, axis=0) / 255.0
-         prediction = model.predict(frame_array)
-         return prediction[0][0] > 0.5  # True if insect detected
-     ```
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
 
-4. **Implement AI Learning Feedback Loop**:
-   - Periodically save images from the camera feed and label them based on zapping success or failure.
-   - Retrain the model with the newly captured data to improve accuracy:
-     - Schedule retraining of the model at regular intervals using automated scripts.
-     - Deploy the updated model on the Raspberry Pi to refine its detection capabilities.
+try:
+    for i in range(100):  # Capture 100 images
+        file_path = os.path.join(save_dir, f'image_{i}.jpg')
+        camera.capture(file_path)
+        print(f'Captured {file_path}')
+        sleep(2)  # Delay between captures
 
-5. **Testing the AI Integration**:
-   - Capture live video, run the `detect_insect()` function on each frame, and log results.
-   - Observe performance improvements over time as the model adapts to new insect patterns.
+finally:
+    camera.close()
+```
+
+#### **4.3 Train the Initial Machine Learning Model**
+Once you have a dataset of labeled images, you can train a CNN to detect insects. Here’s the code to define, compile, and train a simple CNN model using Keras:
+
+```python
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from keras.preprocessing.image import ImageDataGenerator
+
+# Define the CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(1, activation='sigmoid')  # Binary classification: Insect or not
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Set up data augmentation for training
+train_datagen = ImageDataGenerator(rescale=1./255)
+
+# Load training data
+train_generator = train_datagen.flow_from_directory(
+    'data/train',  # Directory with training images
+    target_size=(64, 64),  # Resize images
+    batch_size=32,
+    class_mode='binary'
+)
+
+# Train the model
+model.fit(train_generator, steps_per_epoch=100, epochs=5)
+
+# Save the trained model
+model.save('insect_detector.h5')
+```
+
+The above script will train the model using images from the `data/train` directory and save it as `insect_detector.h5`. 
+
+#### **4.4 Integrate the Model into Real-Time Detection**
+Now, let's integrate the trained model into a real-time detection script:
+
+```python
+from keras.models import load_model
+import cv2
+import numpy as np
+
+# Load the pre-trained model
+model = load_model('insect_detector.h5')
+
+# Define the function to detect insects in frames
+def detect_insect(frame):
+    frame_resized = cv2.resize(frame, (64, 64))  # Resize to match input shape
+    frame_array = np.expand_dims(frame_resized, axis=0) / 255.0  # Normalize
+    prediction = model.predict(frame_array)
+    return prediction[0][0] > 0.5  # True if insect detected
+
+# Capture real-time video from the camera
+camera = cv2.VideoCapture(0)
+
+try:
+    while True:
+        ret, frame = camera.read()
+        if not ret:
+            break
+
+        # Run insect detection
+        if detect_insect(frame):
+            print("Insect detected!")
+            # Add code here to trigger the laser zapper
+        else:
+            print("No insect detected.")
+
+        # Display the frame (Optional)
+        cv2.imshow('Video Feed', frame)
+        
+        # Break loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+finally:
+    camera.release()
+    cv2.destroyAllWindows()
+```
+
+This script captures frames from the camera, processes them with the `detect_insect()` function, and prints whether an insect is detected.
+
+#### **4.5 Implement AI Learning Feedback Loop**
+The feedback loop involves capturing images in real-time, labeling them based on zapping success or failure, and periodically retraining the model with this new data.
+
+1. **Capture Images Based on Detection Outcome**:
+   
+   Modify the detection script to save images for retraining purposes:
+   
+   ```python
+   import os
+
+   # Directory for new data
+   success_dir = 'data/feedback/insect/'
+   failure_dir = 'data/feedback/no_insect/'
+
+   if not os.path.exists(success_dir):
+       os.makedirs(success_dir)
+   if not os.path.exists(failure_dir):
+       os.makedirs(failure_dir)
+
+   frame_count = 0
+
+   def capture_feedback_image(frame, success):
+       global frame_count
+       label_dir = success_dir if success else failure_dir
+       cv2.imwrite(os.path.join(label_dir, f'frame_{frame_count}.jpg'), frame)
+       frame_count += 1
+   ```
+
+   In the detection loop, call `capture_feedback_image()` based on detection success or failure.
+
+2. **Retrain the Model with Feedback Data**:
+   
+   Periodically retrain the model using newly captured feedback data:
+   
+   ```python
+   def retrain_model():
+       feedback_datagen = ImageDataGenerator(rescale=1./255)
+       feedback_generator = feedback_datagen.flow_from_directory(
+           'data/feedback',  # Directory with feedback images
+           target_size=(64, 64),
+           batch_size=32,
+           class_mode='binary'
+       )
+       
+       # Retrain the model
+       model.fit(feedback_generator, steps_per_epoch=100, epochs=3)
+
+       # Save the updated model
+       model.save('insect_detector_updated.h5')
+   ```
+
+3. **Automate Retraining**:
+   
+   Schedule retraining using a simple shell script and `cron`. Create a script named `retrain.sh`:
+   
+   ```bash
+   #!/bin/bash
+   python3 -c "from my_detection_script import retrain_model; retrain_model()"
+   ```
+
+   Make the script executable:
+   
+   ```bash
+   chmod +x retrain.sh
+   ```
+
+   Add a cron job to retrain the model every day:
+   
+   ```bash
+   crontab -e
+   ```
+   
+   Add the line:
+   
+   ```bash
+   0 0 * * * /path/to/retrain.sh
+   ```
+
+#### **4.6 Testing the AI Integration**
+1. Capture live video, run the `detect_insect()` function on each frame, and log results.
+2. Periodically review the performance of the model to ensure it is adapting and improving over time. Look for increases in detection accuracy and reduced false positives.
+3. The retraining process using the feedback loop should gradually enhance the system’s detection capabilities.
+
+By implementing this AI learning feedback loop, the system will continuously improve its accuracy and adapt to various insect patterns in its operational environment.
 
 ### **5. Estimated Cost Table**
 
