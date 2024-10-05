@@ -1,3 +1,5 @@
+Here's the revised guide with the estimated cost table formatted to work correctly on GitHub:
+
 ### **Designing and Assembling an Orbital Insect Zapping System – Step-by-Step Guide**
 
 This comprehensive guide outlines the process to assemble an orbital sensor system designed to detect and neutralize flying insects using sensors, a rotational platform, and a laser zapper. The instructions include detailed electronic schematics, coding, and a step-by-step implementation of an AI learning component to enhance accuracy over time.
@@ -152,13 +154,14 @@ This section details the implementation of a feedback mechanism using machine le
    - Observe performance improvements over time as the model adapts to new insect patterns.
 
 ### **5. Estimated Cost Table**
+
 | **Component**                 | **Quantity** | **Cost Per Unit (USD)** | **Total Cost (USD)** | **Example Products**                                                                                             |
 |-------------------------------|--------------|-------------------------|----------------------|---------------------------------------------------------------------------------------------------------------|
 | Raspberry Pi 4               | 1            | $50                     | $50                  | [Option 1](https://www.amazon.com/Raspberry-Pi-4-Model-B/dp/B07TC2BK1X), [Option 2](https://www.amazon.com/CanaKit-Raspberry-Pi-4-4GB/dp/B07V5JTMV9), [Option 3](https://www.amazon.com/LABISTS-Raspberry-4GB-Starter-Micro-HDMI/dp/B07WG4DW52)      |
 | High-Speed Camera Module     | 1            | $100                    | $100                 | [Option 1](https://www.amazon.com/Raspberry-Pi-Camera-Module-Megapixel/dp/B07X8DJYYJ), [Option 2](https://www.amazon.com/Arducam-Megapixel-Camera-Raspberry-Degree/dp/B0899TGPQM), [Option 3](https://www.amazon.com/Raspberry-Pi-Camera-V2-8-Megapixel/dp/B01ER2SKFS) |
-| IR Sensor (e.g., MLX90640)   | 1            | $70                     | $70                  | [Option 1](https://www.amazon.com/Adafruit-MLX90640-24x32-IR-Thermal-Camera/dp/B07KYLFH84), [Option 2](https://www.amazon.com/HiLetgo-MLX90640-Infrared-Resolution-
+| IR Sensor (e.g., MLX90640)   | 1            | $70                     | $70                  | [Option 1](https://www.amazon.com/Adafruit-MLX90640-24x32-IR-Thermal-Camera/dp/B07KYLFH84), [Option 2](https://www
 
-Temperature/dp/B09JYR83FL), [Option 3](https://www.amazon.com/Infrared-Thermometer-Resolution-Imaging-Thermal/dp/B097Q63ND3) |
+.amazon.com/HiLetgo-MLX90640-Infrared-Resolution-Temperature/dp/B09JYR83FL), [Option 3](https://www.amazon.com/Infrared-Thermometer-Resolution-Imaging-Thermal/dp/B097Q63ND3) |
 | Laser Module (Class 3B)      | 1            | $150                    | $150                 | [Option 1](https://www.amazon.com/Adjustable-Focus-Wavelength-Pointer-Professional/dp/B078ZKLD1M), [Option 2](https://www.amazon.com/Laserland-Focusable-Power-200mW-450nm/dp/B07SLPYH1J), [Option 3](https://www.amazon.com/303-Pointer-Burning-Matches-Included/dp/B08FDNK9XF) |
 | Stepper Motors               | 2            | $25                     | $50                  | [Option 1](https://www.amazon.com/STEPPERONLINE-Stepper-Motor-Bipolar-Connector/dp/B00PNEQKC0), [Option 2](https://www.amazon.com/Stepper-Motor-Bipolar-Screwdriver-Printer/dp/B07F8Z8KNY), [Option 3](https://www.amazon.com/Stepperonline-Stepper-Extruder-Printer-Stepper/dp/B00PNEQKYW) |
 | Motor Driver Board (L298N)   | 1            | $10                     | $10                  | [Option 1](https://www.amazon.com/HiLetgo-Stepper-Motor-Driver-Controller/dp/B00WJS6DGU), [Option 2](https://www.amazon.com/DAOKI-L298N-Controller-Stepper-Duemilanove/dp/B07CNZNYQ6), [Option 3](https://www.amazon.com/SongHe-Controller-Module-Arduino-Raspberry/dp/B07PQGGDKP) |
@@ -169,7 +172,7 @@ Temperature/dp/B09JYR83FL), [Option 3](https://www.amazon.com/Infrared-Thermomet
 | Custom Enclosure             | 1            | $150                    | $150                 | [Option 1](https://www.amazon.com/BUD-Industries-Polycarbonate-Waterproof-IP67-139/dp/B005T5TDWY), [Option 2](https://www.amazon.com/Gonioa-Project-Enclosure-200x120x75mm-Waterproof/dp/B08HJPKPXG), [Option 3](https://www.amazon.com/LeMotech-Junction-Box-Waterproof-Projects/dp/B07Q9ZDG5F) |
 | Breadboard, Wires, etc.      | 1 set        | $20                     | $20                  | [Option 1](https://www.amazon.com/EL-KIT-003-Breadboard-Resistor-Potentiometer-Raspberry/dp/B01LZKSVRB), [Option 2](https://www.amazon.com/Electronics-Components-Variety-Multimeter-Ceramic/dp/B07PQMBK8Z), [Option 3](https://www.amazon.com/Breadboard-Breadboards-Potentiometer-Resistors-Jumper/dp/B01N1WQS8K) |
 
-| **Total Estimated Cost**     |              |                         | **$840**             |                                                                                                               |
+**Total Estimated Cost:** $840
 
 ### **6. Testing the Full System**
 1. **Detection Test**: Run detection algorithms using the camera and IR sensors.
