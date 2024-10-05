@@ -171,11 +171,223 @@ This section details the implementation of a feedback mechanism using machine le
 
 **Total Estimated Cost:** $840
 
-### **6. Testing the Full System**
-1. **Detection Test**: Run detection algorithms using the camera and IR sensors.
-2. **Tracking Test**: Ensure the gimbal aligns accurately with detected targets.
-3. **Zapping Test**: Activate the zapper within the predefined safe range.
-4. **Safety Test**: Use the proximity sensor to disable the zapper when detecting a human.
-5. **AI Learning Test**: Implement feedback-driven training; monitor accuracy improvements.
+Certainly! Here is a detailed plan to test each part of the orbital bug zapping system, ensuring each component is properly integrated and functions as expected.
 
-This guide provides a detailed blueprint for building an advanced, AI-integrated insect control system. The provided cost table lists potential components and their Amazon links, making procurement straightforward. With these steps, you'll develop a smart, automated pest management solution.
+### **6. Testing the Full System**
+
+#### **1. Detection Test: Camera and IR Sensor**
+This test ensures that the camera and IR sensors can accurately detect flying insects in the environment.
+
+**Steps:**
+1. **Setup**: Power on the system and ensure the camera and IR sensors are properly connected to the Raspberry Pi.
+2. **Run Detection Script**: Use the following Python script to activate the camera and IR sensor, capturing frames and processing them to detect movement.
+   ```python
+   from picamera import PiCamera
+   from time import sleep
+   import cv2
+   import numpy as np
+   import smbus
+
+   # Initialize camera
+   camera = PiCamera()
+   camera.resolution = (640, 480)
+   camera.start_preview()
+
+   # IR Sensor Setup (Assuming MLX90640)
+   bus = smbus.SMBus(1)
+   mlx90640_address = 0x33  # Replace with your IR sensor's I2C address
+
+   def capture_frame():
+       frame = np.empty((480, 640, 3), dtype=np.uint8)
+       camera.capture(frame, 'bgr')
+       return frame
+
+   def detect_movement(frame):
+       gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+       blur_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+       return blur_frame
+
+   def get_ir_data():
+       # Simulated read from IR sensor (Replace with actual read logic)
+       ir_data = bus.read_i2c_block_data(mlx90640_address, 0x00, 32)
+       return ir_data
+
+   try:
+       for _ in range(5):  # Capture and process 5 frames
+           frame = capture_frame()
+           movement_frame = detect_movement(frame)
+           ir_data = get_ir_data()
+
+           # Process frames and IR data (Implement your detection logic here)
+           print("Movement detected in frame.")
+           print("IR data:", ir_data)
+
+           sleep(1)
+
+   finally:
+       camera.stop_preview()
+   ```
+3. **Observe**: The script captures video frames and processes them using basic motion detection. It also retrieves data from the IR sensor.
+4. **Expected Outcome**: The output indicates if movement is detected. The IR data readout should show changing values when a heat source (e.g., a hand or insect) is in range.
+
+#### **2. Tracking Test: Gimbal Alignment with Detected Targets**
+This test verifies that the gimbal platform accurately tracks detected targets.
+
+**Steps:**
+1. **Setup**: Connect the stepper motors to the motor driver and gimbal, ensuring all wiring is correct.
+2. **Run Tracking Script**:
+   ```python
+   import RPi.GPIO as GPIO
+   import time
+
+   # Motor pins
+   motor_x_pin1 = 17
+   motor_x_pin2 = 18
+   motor_y_pin1 = 22
+   motor_y_pin2 = 23
+
+   GPIO.setmode(GPIO.BCM)
+   GPIO.setup([motor_x_pin1, motor_x_pin2, motor_y_pin1, motor_y_pin2], GPIO.OUT)
+
+   def rotate_motor_x(direction):
+       if direction == 'left':
+           GPIO.output(motor_x_pin1, GPIO.HIGH)
+           GPIO.output(motor_x_pin2, GPIO.LOW)
+       elif direction == 'right':
+           GPIO.output(motor_x_pin1, GPIO.LOW)
+           GPIO.output(motor_x_pin2, GPIO.HIGH)
+
+   def rotate_motor_y(direction):
+       if direction == 'up':
+           GPIO.output(motor_y_pin1, GPIO.HIGH)
+           GPIO.output(motor_y_pin2, GPIO.LOW)
+       elif direction == 'down':
+           GPIO.output(motor_y_pin1, GPIO.LOW)
+           GPIO.output(motor_y_pin2, GPIO.HIGH)
+
+   try:
+       # Simulate tracking
+       rotate_motor_x('right')
+       time.sleep(1)
+       rotate_motor_x('left')
+       time.sleep(1)
+       rotate_motor_y('up')
+       time.sleep(1)
+       rotate_motor_y('down')
+
+   finally:
+       GPIO.cleanup()
+   ```
+3. **Observe**: The gimbal should rotate based on the simulated commands. For real tracking, integrate this with the detection output to dynamically adjust the motor movements.
+4. **Expected Outcome**: The gimbal moves smoothly and accurately in response to the motor commands, indicating proper tracking capability.
+
+#### **3. Zapping Test: Activating the Zapper Within Safe Range**
+This test verifies the zapper's functionality, ensuring it only activates when the target is within a predefined range.
+
+**Steps:**
+1. **Safety Check**: Make sure the laser zapper is installed with safety measures (e.g., a shutter or cover) to avoid accidental firing.
+2. **Run Zapper Control Script**:
+   ```python
+   laser_pin = 17  # Example pin for laser control
+
+   GPIO.setmode(GPIO.BCM)
+   GPIO.setup(laser_pin, GPIO.OUT)
+
+   def activate_zapper():
+       GPIO.output(laser_pin, GPIO.HIGH)
+       time.sleep(0.5)  # Laser on for 0.5 seconds
+       GPIO.output(laser_pin, GPIO.LOW)
+
+   try:
+       activate_zapper()
+       print("Zapper activated!")
+   finally:
+       GPIO.cleanup()
+   ```
+3. **Observe**: The zapper should turn on and off briefly, indicating proper control.
+4. **Expected Outcome**: The laser activates for the specified duration and turns off without any issue. This confirms the zapper's operational readiness.
+
+#### **4. Safety Test: Using Proximity Sensor to Disable the Zapper**
+This test ensures the zapper does not activate when a human or large object is detected nearby.
+
+**Steps:**
+1. **Setup**: Connect the ultrasonic proximity sensor (e.g., HC-SR04) to the GPIO pins on the Raspberry Pi.
+2. **Run Proximity Sensor Script**:
+   ```python
+   import RPi.GPIO as GPIO
+   import time
+
+   TRIG = 23
+   ECHO = 24
+   laser_pin = 17
+
+   GPIO.setmode(GPIO.BCM)
+   GPIO.setup(TRIG, GPIO.OUT)
+   GPIO.setup(ECHO, GPIO.IN)
+   GPIO.setup(laser_pin, GPIO.OUT)
+
+   def measure_distance():
+       GPIO.output(TRIG, False)
+       time.sleep(2)
+
+       GPIO.output(TRIG, True)
+       time.sleep(0.00001)
+       GPIO.output(TRIG, False)
+
+       while GPIO.input(ECHO) == 0:
+           pulse_start = time.time()
+
+       while GPIO.input(ECHO) == 1:
+           pulse_end = time.time()
+
+       pulse_duration = pulse_end - pulse_start
+       distance = pulse_duration * 17150  # Convert to cm
+       return distance
+
+   try:
+       distance = measure_distance()
+       print(f"Measured Distance: {distance} cm")
+       if distance > 30:  # Set safe range limit
+           GPIO.output(laser_pin, GPIO.HIGH)  # Enable zapper
+           time.sleep(0.5)
+           GPIO.output(laser_pin, GPIO.LOW)
+       else:
+           print("Human detected. Zapper deactivated.")
+   finally:
+       GPIO.cleanup()
+   ```
+3. **Observe**: If an object (e.g., a hand) is within 30 cm, the zapper remains deactivated.
+4. **Expected Outcome**: The zapper only activates if no object is detected within the safe range, ensuring safety.
+
+#### **5. AI Learning Test: Implementing Feedback-Driven Training**
+This test confirms that the system can learn from successes and failures to improve its accuracy over time.
+
+**Steps:**
+1. **Initial Data Collection**:
+   - Set up the camera to capture images during operation.
+   - Save images along with zapper activation status (successful or failed zap).
+
+2. **Labeling**:
+   - Manually label the saved images to indicate successful zaps versus false positives.
+   - Store the labeled data in a training dataset.
+
+3. **Retrain the Model**:
+   - Retrain the convolutional neural network (CNN) model using the new dataset.
+   - Update the model file (`insect_detector.h5`) on the Raspberry Pi.
+   ```python
+   model.fit(train_generator, steps_per_epoch=100, epochs=5)
+   model.save('insect_detector_updated.h5')
+   ```
+
+4. **Deploy the Updated Model**:
+   - Integrate the new model into the real-time detection script.
+   ```python
+   model = load_model('insect_detector_updated.h5')
+   ```
+
+5. **Run the System**: Operate the system with the updated model for a few hours or days, capturing new data.
+6. **Monitor Performance**: Compare the accuracy of insect detection before and after the AI model update.
+
+7. **Expected Outcome**: Over time, the system should improve its zap success rate as it learns to distinguish between true insect targets and false positives.
+
+By conducting these tests, you can validate that each part of the system is functional and integrated correctly. This step-by-step testing process ensures the system operates as intended while maintaining safety and adaptability through AI learning.
