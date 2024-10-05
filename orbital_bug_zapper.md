@@ -1,5 +1,4 @@
-Here's the revised guide with the estimated cost table formatted to work correctly on GitHub:
-
+---
 ### **Designing and Assembling an Orbital Insect Zapping System – Step-by-Step Guide**
 
 This comprehensive guide outlines the process to assemble an orbital sensor system designed to detect and neutralize flying insects using sensors, a rotational platform, and a laser zapper. The instructions include detailed electronic schematics, coding, and a step-by-step implementation of an AI learning component to enhance accuracy over time.
