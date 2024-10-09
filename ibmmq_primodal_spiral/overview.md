@@ -1,3 +1,5 @@
+![Cover](./cover.jpg "Cover")
+
 ## The Golden Ratio in System Design: Applications to IBM MQ Systems
 
 Throughout history, the golden ratio (approx. 1.618) has influenced art, architecture, and even technology. In ancient times, it was used in the Parthenon and Da Vinci’s "Vitruvian Man". Today, web design, finance algorithms, and even AI use it. This document explores its application in **IBM MQ systems**, encouraging innovative system designs using these timeless mathematical principles. While not a definitive solution, it serves as a guide for potential strategies leveraging the golden ratio.
